@@ -261,6 +261,18 @@ Evidence:
 docs/test-results/
 ```
 
+## Host-Side Baseline
+
+During Phase 0 Virtual Development Mode, the host-only scaffold can be checked with:
+
+```
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+These commands validate build wiring and host-side test scaffolding only. They do not constitute hardware validation on the BeagleBone Black.
+
 ---
 
 # MCU Coprocessor (Arduino / Future STM32)
@@ -461,4 +473,3 @@ This project is designed to serve as a **portfolio‑grade embedded systems plat
 - professional engineering documentation
 
 The project intentionally mirrors practices used in aerospace, robotics, and advanced automotive embedded systems development.
-

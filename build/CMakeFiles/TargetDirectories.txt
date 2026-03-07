@@ -1,0 +1,2 @@
+C:/Users/Alex Lucero/source/repos/Vehicle-Telemetry-and-Control-Node-VTCN-/build/CMakeFiles/edit_cache.dir
+C:/Users/Alex Lucero/source/repos/Vehicle-Telemetry-and-Control-Node-VTCN-/build/CMakeFiles/rebuild_cache.dir

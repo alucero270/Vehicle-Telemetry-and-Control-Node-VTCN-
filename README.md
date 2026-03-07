@@ -145,6 +145,7 @@ vtcn/
     procedures/
       beaglebone_bringup.md
       cross_compile_setup.md
+      virtual_development_mode.md
       adc_validation.md
       debugging_workflow.md
 
@@ -452,13 +453,13 @@ VTCN is considered successful when:
 
 # Current Status
 
-Phase: **Platform Bring‑up**
+Phase: **Virtual Development Mode (Phase 0)**
 
 Next Action:
 
-1. Flash Debian image to BBB microSD
-2. Boot and verify kernel and interface exposure
-3. Begin documenting Phase 1 bring-up procedure
+1. Continue host-side scaffolding, interface work, and pure-logic tests
+2. Prepare Phase 1 bring-up and validation procedures
+3. Defer BeagleBone Black hardware claims until target evidence exists
 
 ---
 

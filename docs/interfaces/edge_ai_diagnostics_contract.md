@@ -94,7 +94,7 @@ Rules:
 - the Edge AI Diagnostics Platform must validate or trust only already-validated protocol data according to the defined transport path
 - unsupported versions, bad CRC, or malformed lengths are explicit contract failures, not soft warnings
 
-## Non-Goals
+## non-goals
 
 This contract does not define:
 

@@ -16,7 +16,7 @@ In scope:
 - payload length rules
 - CRC and integrity behavior
 
-Out of scope:
+non-goals:
 
 - full payload schema catalog
 - daemon implementation details

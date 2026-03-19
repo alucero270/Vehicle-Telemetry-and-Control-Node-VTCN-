@@ -1,320 +1,321 @@
-# VTCN – Vehicle Telemetry & Control Node
+VTCN – Vehicle Telemetry & Control Node
 
-Embedded Linux telemetry platform built on the **BeagleBone Black (ARM Cortex‑A8)**.
+Embedded Linux telemetry platform built on the BeagleBone Black (ARM Cortex-A8).
 
-This project is intentionally structured as a production-style embedded systems engineering exercise. All features must be implemented and validated on real hardware. No simulated claims.
+This project is intentionally structured as a production-style embedded systems engineering exercise.
 
----
+All production features must be implemented and validated on real hardware.
+Host-side simulations are used only for pre-integration validation and are never presented as completed hardware functionality.
 
-# Project Purpose
-
-VTCN exists to demonstrate real-world embedded Linux competencies:
-
-* ARM-based Linux bring-up
-* Cross-compilation workflows (x86 → ARM)
-* Hardware interface validation (GPIO, I2C, SPI, UART, ADC)
-* Telemetry framing and transport (TCP)
-* Structured logging (SQLite)
-* Low-level debugging (gdb, strace, perf, dmesg)
-* Linux kernel module development
-* systemd service hardening
-* Reproducible build and deployment procedures
-
-This platform also serves as a telemetry foundation for physical vehicle integration (OM606 engine swap), starting with TPS and coolant temperature acquisition.
+VTCN is designed to integrate with the Edge AI Diagnostics Platform, which consumes telemetry streams for analysis, diagnostics, and automation workflows.
 
 ---
 
-# Development Principles
+Project Purpose
 
-1. **Hardware-first validation**
-   Every subsystem must be tested and documented on the BeagleBone Black.
+VTCN exists to demonstrate real-world embedded Linux competencies while providing a telemetry node suitable for robotics, automotive, and aerospace-style systems.
 
-2. **Reproducibility**
-   All builds, deployments, and tests must be repeatable via documented procedures.
+Core competencies demonstrated:
 
-3. **Modular Architecture**
+- ARM-based Linux bring-up
+- Cross-compilation workflows (x86 → ARM)
+- Hardware interface validation (GPIO, I2C, SPI, UART, ADC)
+- Telemetry protocol design
+- Structured logging (SQLite)
+- TCP telemetry streaming
+- Low-level debugging (gdb, strace, perf, dmesg)
+- Linux kernel module development
+- systemd service hardening
+- Reproducible builds and validation procedures
 
-   * HAL = hardware I/O only
-   * Daemon = policy, filtering, calibration, networking
-   * Protocol = versioned and isolated
-
-4. **Evidence-Driven Engineering**
-   Each phase requires captured logs, outputs, and documented test results.
+The platform is also intended to support real vehicle telemetry work, beginning with the OM606 engine swap project (TPS and coolant telemetry).
 
 ---
 
-# Repository Structure
+Relationship to the Edge AI Diagnostics Platform
 
-```
+VTCN acts as a telemetry acquisition and transport node.
+
+Physical Sensors
+      │
+      ▼
+HAL (BBB / MCU)
+      │
+      ▼
+VTCN Telemetry Daemon
+      │
+      ├── SQLite Local Logging
+      │
+      └── TCP Telemetry Stream
+              │
+              ▼
+Edge AI Diagnostics Platform
+              │
+              ▼
+Diagnostics / Analysis / Automation
+
+The Edge AI platform is responsible for:
+
+- signal analysis
+- anomaly detection
+- system diagnostics
+- telemetry visualization
+
+The interface contract is defined in:
+
+docs/interfaces/edge_ai_diagnostics_contract.md
+
+---
+
+Development Principles
+
+Hardware-First Validation
+
+All production functionality must be validated on the BeagleBone Black or designated MCU hardware.
+
+Reproducibility
+
+All builds, deployments, and validation procedures must be reproducible from a clean environment.
+
+Modular Architecture
+
+Component| Responsibility
+HAL| hardware I/O only
+Telemetry Daemon| filtering, calibration, framing, networking
+Protocol| versioned message format
+MCU Coprocessor| deterministic signal capture
+
+Evidence-Driven Engineering
+
+Each phase requires:
+
+- logs
+- validation output
+- documented procedures
+
+Evidence is stored under:
+
+docs/test-results/
+
+---
+
+Phase 0 – Prototype Work (Virtual Development Mode)
+
+To reduce integration risk before hardware bring-up, VTCN includes host-side prototypes for validating pure logic and timing-sensitive behavior.
+
+Examples:
+
+- signal emulation for pulse-based sensors
+- RPM/frequency estimation
+- telemetry frame encoding/decoding
+- CRC validation
+- fault injection and robustness testing
+
+These prototypes:
+
+- are deterministic and testable
+- run on host systems
+- do not represent completed hardware functionality
+
+---
+
+Active Prototype – Crank Signal Emulation & RPM Estimation
+
+A Phase 0 prototype has been implemented to validate pulse-based signal processing prior to hardware integration.
+
+Purpose
+
+Simulate a crankshaft position sensor signal (36-1 tooth pattern) and validate RPM estimation logic under controlled conditions.
+
+Capabilities
+
+- software-generated pulse signal
+- edge detection and interval measurement
+- RPM estimation from pulse timing
+- configurable noise and jitter injection
+- expected vs measured error reporting
+
+Example Output
+
+Run Configuration
+- Target RPM: 2200
+- Duration: 5.0s
+- Noise: 0.5% jitter
+
+Results
+- Measured RPM: 2189.4
+- Average Error: 0.48%
+- Signal Stability: PASS
+
+Architectural Role
+
+This prototype validates logic that will later operate on:
+
+MCU → BBB HAL → Telemetry Daemon
+
+It is strictly a host-side validation tool.
+
+Next Steps
+
+- integrate logic into HAL-backed signal acquisition
+- validate against real sensor input on BeagleBone Black
+
+---
+
+Repository Structure
+
 vtcn/
+
   README.md
+  CMakeLists.txt
 
   docs/
     architecture/
     interfaces/
     procedures/
+    adr/
+    ai/
     test-results/
 
   toolchain/
-    beaglebone-gcc.cmake
-    build.sh
-    deploy.sh
 
   vtcn-daemon/
+    include/vtcn/
     src/
-    include/
     tests/
 
-  mcu-node/                # Arduino / MCU coprocessor firmware
-    firmware/
-    protocol/
-    test-tools/
-
-  ground-ui/
-
+  mcu-node/
   proto/
-
   schema/
-
   systemd/
-
   lkm/
-```
 
 ---
 
-# MCU Coprocessor (Arduino / Future STM32)
+Testing Strategy
 
-The BeagleBone Black remains the primary embedded Linux platform.
-The MCU node acts strictly as a **real-time coprocessor and signal conditioner**.
+Unit Tests
 
-## Purpose
+- pure logic validation
+- protocol encoding/decoding
+- CRC checks
 
-The MCU may be used to:
+Integration Tests
 
-* Capture high-frequency pulse inputs (RPM, speed sensors)
-* Perform deterministic timing using hardware timers
-* Condition and filter noisy analog automotive signals
-* Provide a watchdog/reset mechanism for the BBB
-* Expose a clean UART/I2C/SPI protocol to the Linux daemon
+- module interaction
+- daemon startup
+- pipeline validation
 
-## Architectural Rule
+Hardware Validation
 
-* MCU = real-time acquisition only
-* BBB daemon = logging, calibration policy, networking, storage
+- performed on BeagleBone Black
+- requires documented procedures and captured evidence
 
-The MCU must never replace Linux application logic.
+Host-Side Baseline
 
-## Deliverables (When Activated in Later Phases)
-
-* Defined binary protocol between MCU ↔ BBB
-* Documented timing characteristics
-* Validation logs comparing raw vs conditioned signals
-* Failure-mode behavior (BBB reset, heartbeat timeout)
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
 
 ---
 
-```
-vtcn/
-README.md
+MCU Coprocessor
 
-docs/
-architecture/
-interfaces/
-procedures/
-test-results/
+The MCU node provides deterministic real-time capabilities.
 
-toolchain/
-beaglebone-gcc.cmake
-build.sh
-deploy.sh
+MCU = real-time acquisition
+BBB = system orchestration
 
-vtcn-daemon/
-src/
-include/
-tests/
+Responsibilities:
 
-ground-ui/
-
-proto/
-
-schema/
-
-systemd/
-
-lkm/
-
-```
+- high-frequency pulse capture
+- hardware-timed measurements
+- watchdog functionality
 
 ---
 
-# Phase Roadmap
+Phase Roadmap
 
-## Phase 1 – Platform Foundation
+Phase 1 – Platform Foundation
 
-**Objective:** Establish a stable ARM Linux development target.
+- BBB bring-up
+- SSH + serial validation
 
-Deliverables:
-- Debian image flashed and boot validated
-- SSH secured (key-only authentication)
-- Serial console operational
-- Documentation of boot process and exposed interfaces
+Phase 2 – Toolchain
 
-Evidence Required:
-- `uname -a`
-- `dmesg` excerpts
-- Interface listings (`/sys`, `/dev`)
-- Bring-up procedure document
+- cross-compilation
+- deploy workflow
 
----
+Phase 3 – HAL
 
-## Phase 2 – Toolchain & Cross-Compilation
+- ADC, GPIO, I2C, SPI, UART
 
-**Objective:** Build reproducible host → ARM workflow.
+Phase 4 – Debugging
 
-Deliverables:
-- ARM cross-compiler installed on host
-- CMake toolchain file
-- Cross-compiled C++ binary running on BBB
-- Automated deploy script
+- gdb, strace, perf
 
-Evidence Required:
-- `file <binary>` showing ARM ELF
-- Successful remote execution
-- Documented toolchain configuration
+Phase 5 – Kernel Module
+
+- "/dev/vtcn" interface
+
+Phase 6 – Productionization
+
+- systemd service
+- logging
+
+Phase 7 – Yocto
+
+- custom embedded image
 
 ---
 
-## Phase 3 – Hardware Interface Layer (HAL)
+Telemetry Architecture
 
-**Objective:** Implement structured hardware abstraction modules.
+Sensors → HAL → Telemetry Daemon → Storage / Network → Edge AI Platform
 
-Interfaces:
-- ADC (IIO sysfs)
-- GPIO (interrupt + polling comparison)
-- I2C (real sensor)
-- SPI (external ADC)
-- UART (mock or loopback)
+Telemetry frames include:
 
-Deliverables:
-- Clean C/C++ interface modules
-- Standalone test utilities for each interface
-- Calibration documentation
-- Timestamped logging validation
-
----
-
-## Phase 4 – Debugging & Observability
-
-**Objective:** Demonstrate professional debugging capability.
-
-Tools:
-- gdb (remote)
-- strace
-- perf
-- dmesg
-
-Deliverables:
-- Documented debugging workflow
-- Performance profiling results
-- Memory usage characterization
-- Failure-mode test documentation
-
----
-
-## Phase 5 – Kernel Module
-
-**Objective:** Implement minimal Linux kernel integration.
-
-Requirements:
-- Loadable kernel module (LKM)
-- `/dev/vtcn` device node
-- Basic read/write interface
-- dmesg logging validation
-
-Deliverables:
-- Kernel module source
-- Build procedure
-- Load/unload validation logs
-
----
-
-## Phase 6 – Productionization
-
-**Objective:** Harden system behavior.
-
-Deliverables:
-- systemd-managed service
-- Watchdog mechanism
-- Structured logging
-- Controlled configuration file
-- Graceful signal handling
-
----
-
-## Phase 7 – Yocto Migration
-
-**Objective:** Build custom embedded Linux image.
-
-Deliverables:
-- Yocto build documentation
-- Custom layer + recipe
-- Reproducible image build steps
-- Image flashing procedure
-- Verified boot + service startup
-
----
-
-# Telemetry Architecture Overview
-
-High-Level Flow:
-
-```
-
-Sensors → HAL → Telemetry Daemon →
-→ SQLite Logging
-→ TCP Stream → Ground Client
-→ (Future) CAN / Replay
-
-```
-
-Telemetry frames must include:
-- Magic number
-- Version
-- Timestamp (monotonic)
-- Payload length
+- magic number
+- protocol version
+- timestamp
+- payload length
 - CRC32
 
-Protocol definitions must live in `/proto` and be versioned.
+---
+
+Definition of Success
+
+VTCN is successful when:
+
+- runs reliably on ARM hardware
+- acquires real sensor data
+- validates hardware interfaces
+- streams telemetry successfully
+- operates under systemd
+- supports reproducible deployment
 
 ---
 
-# Definition of Success
+Current Status
 
-VTCN is considered successful when:
+Phase: Virtual Development Mode (Phase 0)
 
-- It runs reliably on ARM hardware
-- It acquires physical sensor data
-- It exposes validated device interfaces
-- It runs as a managed Linux service
-- It includes documented bring-up and debugging workflows
-- All procedures are reproducible from clean setup
+Next Actions:
 
----
-
-# Current Status
-
-> Phase: Not Started / Platform Bring-up
-
-Next Action:
-1. Flash Debian image to BBB microSD.
-2. Boot and verify kernel and interface exposure.
-3. Begin documenting Phase 1 bring-up procedure.
+1. Complete host-side prototypes and validation
+2. Finalize bring-up procedures
+3. Begin BeagleBone Black integration
 
 ---
 
-# Author Intent
+Author Intent
 
-This project is designed to serve as a credible embedded systems portfolio artifact demonstrating professional engineering rigor across user-space, kernel-space, hardware validation, and embedded Linux platform development.
+This project serves as a portfolio-grade embedded systems platform demonstrating:
 
-```
+- embedded Linux engineering
+- hardware interface development
+- telemetry architecture
+- debugging and validation workflows
+- professional documentation practices
+
+The structure intentionally mirrors workflows used in aerospace, robotics, and advanced automotive systems.

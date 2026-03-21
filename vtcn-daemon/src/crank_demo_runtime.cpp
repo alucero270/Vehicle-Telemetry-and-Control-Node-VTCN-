@@ -1,37 +1,37 @@
-#include "vtcn/config/phase0_runtime.hpp"
+#include "vtcn/runtime/CrankDemoRuntime.hpp"
 
 #include <ostream>
 
 namespace {
 
 constexpr std::string_view kDaemonName = "vtcn-daemon";
-constexpr std::string_view kRuntimeMode = "virtual-development";
+constexpr std::string_view kRuntimeMode = "host-side-validation";
 constexpr std::string_view kProtocolTrack = "telemetry-v1-planning";
 
 void write_help(std::ostream &out) {
-    out << "vtcn-daemon Phase 0 placeholder\n";
+    out << "vtcn-daemon crank demo placeholder\n";
     out << "mode: " << kRuntimeMode << '\n';
     out << "usage: vtcn-daemon [--help|--version]\n";
 }
 
 } // namespace
 
-namespace vtcn::config {
+namespace vtcn::runtime {
 
-Phase0AppInfo phase0_app_info() {
+CrankDemoAppInfo crank_demo_app_info() noexcept {
     return {kDaemonName, kRuntimeMode, kProtocolTrack};
 }
 
-int run_phase0_cli(std::ostream &out, std::ostream &err,
-                   const std::vector<std::string_view> &args) {
+int run_crank_demo_cli(std::ostream &out, std::ostream &err,
+                       const std::vector<std::string_view> &args) {
     if (args.size() <= 1 || args[1] == "--help") {
         write_help(out);
         return 0;
     }
 
     if (args[1] == "--version") {
-        const auto app_info = phase0_app_info();
-        out << app_info.daemon_name << " phase0 " << app_info.runtime_mode << '\n';
+        const auto app_info = crank_demo_app_info();
+        out << app_info.daemon_name << " crank-demo " << app_info.runtime_mode << '\n';
         return 0;
     }
 
@@ -39,4 +39,4 @@ int run_phase0_cli(std::ostream &out, std::ostream &err,
     return 1;
 }
 
-} // namespace vtcn::config
+} // namespace vtcn::runtime

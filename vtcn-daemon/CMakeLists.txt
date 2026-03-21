@@ -7,18 +7,21 @@ target_compile_options(vtcn_warnings
         $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Wextra -Wpedantic>
 )
 
-add_library(vtcn_daemon_phase0 STATIC
-    src/phase0_runtime.cpp
+add_library(vtcn_daemon_runtime STATIC
+    src/crank_demo_runtime.cpp
+    src/gap_detector.cpp
+    src/rpm_estimator.cpp
+    src/simulated_crank_pulse_source.cpp
 )
 
-target_include_directories(vtcn_daemon_phase0
+target_include_directories(vtcn_daemon_runtime
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_compile_features(vtcn_daemon_phase0 PUBLIC cxx_std_23)
+target_compile_features(vtcn_daemon_runtime PUBLIC cxx_std_23)
 
-target_link_libraries(vtcn_daemon_phase0
+target_link_libraries(vtcn_daemon_runtime
     PUBLIC
         vtcn_warnings
 )
@@ -29,7 +32,7 @@ add_executable(vtcn-daemon
 
 target_link_libraries(vtcn-daemon
     PRIVATE
-        vtcn_daemon_phase0
+        vtcn_daemon_runtime
 )
 
 if(BUILD_TESTING)
@@ -50,24 +53,24 @@ if(BUILD_TESTING)
     endif()
 
     add_executable(vtcn-daemon-unit-tests
-        tests/unit/phase0_runtime_test.cpp
+        tests/unit/crank_demo_runtime_test.cpp
     )
 
     target_link_libraries(vtcn-daemon-unit-tests
         PRIVATE
-            vtcn_daemon_phase0
+            vtcn_daemon_runtime
             GTest::gtest_main
     )
 
     add_test(NAME vtcn-daemon-unit-tests COMMAND vtcn-daemon-unit-tests)
 
     add_executable(vtcn-daemon-integration-smoke
-        tests/integration/daemon_startup_smoke.cpp
+        tests/integration/crank_demo_smoke.cpp
     )
 
     target_link_libraries(vtcn-daemon-integration-smoke
         PRIVATE
-            vtcn_daemon_phase0
+            vtcn_daemon_runtime
     )
 
     add_test(NAME vtcn-daemon-integration-smoke COMMAND vtcn-daemon-integration-smoke)
@@ -75,6 +78,6 @@ if(BUILD_TESTING)
 
     set_tests_properties(vtcn-daemon-cli-help
         PROPERTIES
-            PASS_REGULAR_EXPRESSION "virtual-development"
+            PASS_REGULAR_EXPRESSION "host-side-validation"
     )
 endif()

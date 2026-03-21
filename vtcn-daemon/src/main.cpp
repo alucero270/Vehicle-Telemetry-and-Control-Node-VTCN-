@@ -1,4 +1,4 @@
-#include "vtcn/config/phase0_runtime.hpp"
+#include "vtcn/runtime/CrankDemoRuntime.hpp"
 
 #include <iostream>
 #include <string_view>
@@ -12,5 +12,5 @@ int main(int argc, char *argv[]) {
         args.emplace_back(argv[index]);
     }
 
-    return vtcn::config::run_phase0_cli(std::cout, std::cerr, args);
+    return vtcn::runtime::run_crank_demo_cli(std::cout, std::cerr, args);
 }

@@ -1,3 +1,12 @@
+add_library(vtcn_warnings INTERFACE)
+
+# Keep warning policy scoped to active VTCN targets rather than third-party dependencies.
+target_compile_options(vtcn_warnings
+    INTERFACE
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive->
+        $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wall -Wextra -Wpedantic>
+)
+
 add_library(vtcn_daemon_phase0 STATIC
     src/phase0_runtime.cpp
 )
@@ -8,6 +17,11 @@ target_include_directories(vtcn_daemon_phase0
 )
 
 target_compile_features(vtcn_daemon_phase0 PUBLIC cxx_std_23)
+
+target_link_libraries(vtcn_daemon_phase0
+    PUBLIC
+        vtcn_warnings
+)
 
 add_executable(vtcn-daemon
     src/main.cpp

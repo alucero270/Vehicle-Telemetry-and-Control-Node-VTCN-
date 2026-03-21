@@ -7,7 +7,7 @@ target_include_directories(vtcn_daemon_phase0
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_compile_features(vtcn_daemon_phase0 PUBLIC cxx_std_17)
+target_compile_features(vtcn_daemon_phase0 PUBLIC cxx_std_23)
 
 add_executable(vtcn-daemon
     src/main.cpp

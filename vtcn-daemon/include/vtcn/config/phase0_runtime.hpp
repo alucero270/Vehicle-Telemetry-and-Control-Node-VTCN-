@@ -14,8 +14,6 @@ struct Phase0AppInfo {
 
 Phase0AppInfo phase0_app_info();
 
-int run_phase0_cli(std::ostream& out,
-                   std::ostream& err,
-                   const std::vector<std::string_view>& args);
+int run_phase0_cli(std::ostream &out, std::ostream &err, const std::vector<std::string_view> &args);
 
-}  // namespace vtcn::config
+} // namespace vtcn::config

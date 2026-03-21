@@ -20,11 +20,8 @@ TEST(Phase0RuntimeTest, HelpTextAdvertisesVirtualMode) {
     std::ostringstream out;
     std::ostringstream err;
 
-    const auto exit_code =
-        vtcn::config::run_phase0_cli(
-            out,
-            err,
-            std::vector<std::string_view>{"vtcn-daemon", "--help"});
+    const auto exit_code = vtcn::config::run_phase0_cli(
+        out, err, std::vector<std::string_view>{"vtcn-daemon", "--help"});
 
     EXPECT_EQ(exit_code, 0);
     EXPECT_TRUE(err.str().empty());
@@ -35,15 +32,12 @@ TEST(Phase0RuntimeTest, UnknownArgumentFailsClearly) {
     std::ostringstream out;
     std::ostringstream err;
 
-    const auto exit_code =
-        vtcn::config::run_phase0_cli(
-            out,
-            err,
-            std::vector<std::string_view>{"vtcn-daemon", "--unknown"});
+    const auto exit_code = vtcn::config::run_phase0_cli(
+        out, err, std::vector<std::string_view>{"vtcn-daemon", "--unknown"});
 
     EXPECT_NE(exit_code, 0);
     EXPECT_TRUE(out.str().empty());
     EXPECT_NE(err.str().find("--unknown"), std::string::npos);
 }
 
-}  // namespace
+} // namespace

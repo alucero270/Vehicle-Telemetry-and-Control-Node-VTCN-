@@ -18,10 +18,7 @@ int main() {
     std::ostringstream err;
 
     const auto exit_code =
-        vtcn::config::run_phase0_cli(
-            out,
-            err,
-            std::vector<std::string_view>{"vtcn-daemon"});
+        vtcn::config::run_phase0_cli(out, err, std::vector<std::string_view>{"vtcn-daemon"});
 
     if (exit_code != 0) {
         return 1;

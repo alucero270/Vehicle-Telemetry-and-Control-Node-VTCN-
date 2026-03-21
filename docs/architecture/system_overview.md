@@ -32,6 +32,24 @@ Ground Client and Edge AI Diagnostics Platform
 
 VTCN does not exist to perform fleet-scale analytics or high-level diagnostic reasoning on the node itself. Its job is to move trustworthy telemetry and operational evidence from physical interfaces into stable software contracts.
 
+## Current Implemented Slice
+
+The current implemented slice is intentionally narrower than the full architecture.
+
+Today, the active repo supports:
+
+- architecture and ADR documentation
+- host-side CMake and test scaffolding in `vtcn-daemon`
+- a small Phase 0 CLI and test baseline
+- current weekend work aimed at host-side crank pulse simulation, gap detection, and RPM estimation
+
+Today, the active repo does not claim:
+
+- completed BeagleBone bring-up
+- validated HAL behavior on target
+- validated MCU transport or timing behavior
+- production-ready storage, networking, or deployment paths
+
 ## Major Components
 
 ### HAL
@@ -77,6 +95,7 @@ Phase 0 establishes the project truth layer before target hardware is available.
 - architecture and interface documents are authoritative
 - host-side build scaffolding and unit tests are allowed
 - protocol and daemon skeleton work are allowed
+- host-side signal-processing prototypes are allowed when they are labeled as host-side validation only
 - hardware validation claims are not allowed
 
 Real hardware validation is deferred until the BeagleBone Black and supporting interfaces are available. Host-only work in Phase 0 can validate documentation quality, build wiring, and pure logic, but it cannot be used as evidence that GPIO, I2C, SPI, UART, ADC, or MCU timing behavior works on target.

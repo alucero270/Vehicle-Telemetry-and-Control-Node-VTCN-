@@ -8,14 +8,33 @@ This procedure defines the current operating mode for VTCN before target hardwar
 
 Virtual Development Mode allows disciplined progress on documentation, interfaces, build wiring, and host-testable logic without creating false hardware evidence.
 
+## Current Active Slice
+
+The active Phase 0 slice is host-side only.
+
+It currently includes:
+
+- repo and architecture governance
+- host-buildable daemon scaffolding
+- unit and integration test scaffolding
+- a small CLI baseline in `vtcn-daemon`
+- current weekend work toward 36-1 crank pulse simulation, gap detection, and RPM estimation
+
+It does not currently include:
+
+- validated BeagleBone hardware behavior
+- validated HAL modules on target
+- validated MCU timing or heartbeat behavior
+- production-ready storage, networking, or deployment behavior
+
 ## Allowed Work
 
 The following work is in scope during Virtual Development Mode:
 
 - repository scaffolding
 - architecture and interface documentation
-- AI guidance documentation
 - host-side CMake and GoogleTest scaffolding
+- host-side signal simulation and pure processing logic
 - protocol framing helpers and parser tests
 - daemon skeleton work
 - config, logging, storage, and networking scaffolds that do not require target hardware

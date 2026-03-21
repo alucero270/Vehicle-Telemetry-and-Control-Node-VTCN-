@@ -8,13 +8,13 @@ constexpr std::string_view kDaemonName = "vtcn-daemon";
 constexpr std::string_view kRuntimeMode = "virtual-development";
 constexpr std::string_view kProtocolTrack = "telemetry-v1-planning";
 
-void write_help(std::ostream& out) {
+void write_help(std::ostream &out) {
     out << "vtcn-daemon Phase 0 placeholder\n";
     out << "mode: " << kRuntimeMode << '\n';
     out << "usage: vtcn-daemon [--help|--version]\n";
 }
 
-}  // namespace
+} // namespace
 
 namespace vtcn::config {
 
@@ -22,9 +22,8 @@ Phase0AppInfo phase0_app_info() {
     return {kDaemonName, kRuntimeMode, kProtocolTrack};
 }
 
-int run_phase0_cli(std::ostream& out,
-                   std::ostream& err,
-                   const std::vector<std::string_view>& args) {
+int run_phase0_cli(std::ostream &out, std::ostream &err,
+                   const std::vector<std::string_view> &args) {
     if (args.size() <= 1 || args[1] == "--help") {
         write_help(out);
         return 0;
@@ -40,4 +39,4 @@ int run_phase0_cli(std::ostream& out,
     return 1;
 }
 
-}  // namespace vtcn::config
+} // namespace vtcn::config

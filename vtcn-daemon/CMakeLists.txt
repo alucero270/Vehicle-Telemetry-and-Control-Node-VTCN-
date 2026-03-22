@@ -56,6 +56,7 @@ if(BUILD_TESTING)
         tests/unit/crank_demo_runtime_test.cpp
         tests/unit/simulated_crank_pulse_source_test.cpp
             tests/unit/gap_detector_test.cpp
+            tests/unit/rpm_estimator_tests.cpp
     )
 
     target_link_libraries(vtcn-daemon-unit-tests

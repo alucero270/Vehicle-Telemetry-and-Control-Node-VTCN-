@@ -77,8 +77,12 @@ TEST(SimulatedCrankPulseSourceTest, TimestampsAreStrictlyIncreasing) {
     }
 }
 
-TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapBetweenRevolutions) {
-    const auto revolution_count = std::size_t{2};
+TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapPerObservableRevolutionBoundary) {
+    // The generator models one missing-tooth gap per revolution, but adjacent
+    // intervals only expose the gaps that sit between emitted pulses already in
+    // the finite output sequence. That means an N-revolution pulse vector shows
+    // exactly N - 1 observable long inter-revolution gaps.
+    const auto revolution_count = std::size_t{4};
     const auto config = make_config(600, revolution_count);
     const SimulatedCrankPulseSource source{};
 
@@ -96,8 +100,10 @@ TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapBetweenRevolutions)
         }
     }
 
-    // Adjacent intervals only expose boundaries between emitted pulses, so the final
-    // revolution's trailing missing-tooth gap is not observable in this finite sequence.
+    // Each observable boundary between two generated revolutions contributes one
+    // oversized interval. The final revolution's trailing missing-tooth gap is
+    // not represented because no subsequent emitted pulse exists in this finite
+    // sequence to close that last interval.
     EXPECT_EQ(long_gap_count, revolution_count - 1);
 }
 

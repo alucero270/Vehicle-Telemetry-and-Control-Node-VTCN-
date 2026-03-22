@@ -1,5 +1,8 @@
 #include "vtcn/crank/GapDetector.hpp"
 
+#include <cstddef>
+#include <optional>
+
 namespace vtcn::crank {
 
 std::optional<GapDetectionResult> GapDetector::detect(std::span<const PulseEvent> pulses) const {

@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -39,6 +40,33 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
     };
 }
 
+[[nodiscard]] auto jitter_offset_for(const std::size_t pulse_index) -> Timestamp {
+    switch (pulse_index % 6U) {
+    case 0U:
+        return Timestamp{-20};
+    case 1U:
+        return Timestamp{15};
+    case 2U:
+        return Timestamp{-10};
+    case 3U:
+        return Timestamp{25};
+    case 4U:
+        return Timestamp{-15};
+    default:
+        return Timestamp{10};
+    }
+}
+
+[[nodiscard]] auto apply_light_jitter(const std::vector<PulseEvent> &pulses) -> std::vector<PulseEvent> {
+    std::vector<PulseEvent> jittered{pulses};
+
+    for (std::size_t i = 0; i < jittered.size(); ++i) {
+        jittered[i].timestamp += jitter_offset_for(i);
+    }
+
+    return jittered;
+}
+
 TEST(GapDetectorTest, DetectsGapInCleanMultiRevolutionInput) {
     // Two revolutions produce one observable inter-revolution missing-tooth gap,
     // which keeps the expected gap location unambiguous.
@@ -58,6 +86,29 @@ TEST(GapDetectorTest, DetectsGapInCleanMultiRevolutionInput) {
     ASSERT_TRUE(result.has_value());
     // The long interval sits between the last pulse of revolution 0 and the
     // first pulse of revolution 1, so the later pulse index is 35.
+    EXPECT_EQ(result->gap_index, kEmittedPulsesPerRevolution);
+    EXPECT_EQ(result->gap_interval, expected_gap_interval);
+}
+
+TEST(GapDetectorTest, DetectsGapUnderLightJitter) {
+    const auto config = make_config(600, 2);
+
+    const SimulatedCrankPulseSource source{};
+    const auto clean_pulses = source.generate(config);
+    const auto pulses = apply_light_jitter(clean_pulses);
+
+    for (std::size_t i = 1; i < pulses.size(); ++i) {
+        ASSERT_GT(pulses[i].timestamp, pulses[i - 1].timestamp);
+    }
+
+    const auto expected_gap_interval =
+        pulses[kEmittedPulsesPerRevolution].timestamp -
+        pulses[kEmittedPulsesPerRevolution - 1].timestamp;
+
+    const GapDetector detector{};
+    const auto result = detector.detect(pulses);
+
+    ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->gap_index, kEmittedPulsesPerRevolution);
     EXPECT_EQ(result->gap_interval, expected_gap_interval);
 }

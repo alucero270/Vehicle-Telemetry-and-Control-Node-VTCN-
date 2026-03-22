@@ -15,7 +15,7 @@ struct Revolutions final {
 };
 
 struct Rpm final {
-    double value{};
+    std::uint32_t value{};
 };
 
 struct CrankWheelProfile final {

@@ -34,17 +34,19 @@ The initial modeled wheel profile is:
 The simulation model will use:
 
 - one timestamped pulse event per detected tooth passage
+- tooth-event timing rather than full electrical waveform simulation
 - deterministic monotonic timestamps
-- integer `std::chrono` time units rather than floating-point timestamps
+- integer `std::chrono::microseconds` rather than floating-point timestamps
 - a longer inter-event interval to represent the missing-tooth gap
 
 The current implementation direction also adopts the following C++ guidance for this slice:
 
 - use value-oriented domain types
-- use `std::chrono`, `std::span`, `std::optional`, `enum class`, and `constexpr` where they improve clarity and correctness
+- use `std::chrono`, `std::span`, `std::optional`, and `constexpr` where they improve clarity and correctness
 - use const-correctness and RAII as default engineering practice
 - keep algorithmic processing components concrete unless a real substitution boundary exists
 - use one interface at the acquisition boundary now, rather than introducing broad interface hierarchies across the whole pipeline
+- prefer concrete types over speculative enums or type hierarchies unless a real second case exists
 
 Code-facing names should describe domain responsibility rather than project phase. "Phase 0" remains documentation language, not the preferred naming convention for core runtime types.
 
@@ -54,6 +56,7 @@ Code-facing names should describe domain responsibility rather than project phas
 - the signal-processing logic can later be reused with real BBB or MCU-backed event sources
 - the current slice stays honest about what is simulated versus what is hardware-validated
 - the design remains extensible without requiring premature generalization of wheel profiles, protocol features, or transport paths
+- the implementation stays interview-friendly by making the 36-1 timing model explicit and easy to explain
 - future work can add additional source implementations behind `ICrankPulseSource` without rewriting the processing pipeline
 
 ## Deferred Work
@@ -61,6 +64,7 @@ Code-facing names should describe domain responsibility rather than project phas
 The following are intentionally deferred for later phases unless they become necessary sooner:
 
 - configurable crank wheel profiles beyond the default 36-1 model
+- full waveform edge modeling including duty cycle, polarity, or sampled high/low durations
 - richer result and error reporting with `std::expected`
 - broader event or frame polymorphism with `std::variant`
 - generic or policy-based algorithm variation using concepts or templates

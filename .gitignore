@@ -39,5 +39,14 @@
 
 # debug information files
 *.dwo
-/.idea
+
+# IDE and local user files
+/.idea/
+/.vs/
+*.user
+*.DotSettings.user
+
+# Build directories and generated files
 /build/
+/cmake-build-*/
+/compile_commands.json

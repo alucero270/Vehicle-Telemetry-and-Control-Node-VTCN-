@@ -87,16 +87,18 @@ vtcn-daemon/
   src/
   tests/
 
+roadmap/
+  components/
+
 toolchain/
-mcu-node/
-lkm/
-systemd/
 ```
 
 Interpretation:
 - `docs/` holds the architecture truth layer
 - `vtcn-daemon/` is the active host-side implementation area
-- `toolchain/`, `mcu-node/`, `lkm/`, and `systemd/` remain future-facing until backed by code and evidence
+- `toolchain/` contains active build and deployment support
+- `roadmap/` holds future-facing component placeholders rather than reserving empty
+  top-level scaffolding
 
 ## Build And Test
 

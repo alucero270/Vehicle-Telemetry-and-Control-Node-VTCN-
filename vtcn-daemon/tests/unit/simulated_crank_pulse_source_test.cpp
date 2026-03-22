@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <cstdint>
 #include <span>
 #include <vector>
 
@@ -23,6 +22,7 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
 
 [[nodiscard]] auto make_config(std::uint32_t rpm, std::size_t revolution_count,
                                Timestamp start_time = Timestamp{0}) -> CrankSignalConfig {
+    // Keep test setup terse and consistent so each test stays focused on one behavior.
     return CrankSignalConfig{
         .target_rpm = Rpm{rpm},
         .revolution_count = Revolutions{revolution_count},
@@ -37,6 +37,7 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
 }
 
 [[nodiscard]] auto intervals_between(std::span<const PulseEvent> pulses) -> std::vector<Interval> {
+    // Gap shape is validated from adjacent pulse timestamps rather than from synthetic gap events.
     std::vector<Interval> intervals;
     if (pulses.size() < 2) {
         return intervals;
@@ -48,6 +49,15 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
     }
 
     return intervals;
+}
+
+[[nodiscard]] auto nominal_tooth_interval_for(const Rpm rpm) -> Interval {
+    // The generator uses integer microsecond timing, so the expected tooth interval
+    // is derived from one minute in microseconds divided by RPM, then by 36 positions.
+    const auto revolution_period_us =
+        static_cast<Interval::rep>(60'000'000ULL / rpm.value);
+    const auto revolution_period = Interval{revolution_period_us};
+    return revolution_period / kToothPositionsPerRevolution;
 }
 
 TEST(SimulatedCrankPulseSourceTest, GeneratesThirtyFivePulsesPerRevolution) {
@@ -65,6 +75,30 @@ TEST(SimulatedCrankPulseSourceTest, TimestampsAreStrictlyIncreasing) {
     for (std::size_t i = 1; i < pulses.size(); ++i) {
         EXPECT_GT(pulses[i].timestamp, pulses[i - 1].timestamp);
     }
+}
+
+TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapBetweenRevolutions) {
+    const auto revolution_count = std::size_t{2};
+    const auto config = make_config(600, revolution_count);
+    const SimulatedCrankPulseSource source{};
+
+    const auto pulses = source.generate(config);
+    const auto intervals = intervals_between(pulses);
+    const auto nominal_interval = nominal_tooth_interval_for(config.target_rpm);
+    const auto missing_tooth_gap = nominal_interval * 2;
+
+    ASSERT_EQ(intervals.size(), pulses.size() - 1);
+
+    std::size_t long_gap_count = 0;
+    for (const auto interval : intervals) {
+        if (interval == missing_tooth_gap) {
+            ++long_gap_count;
+        }
+    }
+
+    // Adjacent intervals only expose boundaries between emitted pulses, so the final
+    // revolution's trailing missing-tooth gap is not observable in this finite sequence.
+    EXPECT_EQ(long_gap_count, revolution_count - 1);
 }
 
 TEST(SimulatedCrankPulseSourceTest, ProducesDeterministicOutputForIdenticalInputs) {

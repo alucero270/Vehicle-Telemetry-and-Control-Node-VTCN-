@@ -51,7 +51,7 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
     return intervals;
 }
 
-[[nodiscard]] auto nominal_tooth_interval_for(const Rpm rpm) -> Interval {
+[[nodiscard]] auto nominal_tooth_interval(const Rpm rpm) -> Interval {
     // The generator uses integer microsecond timing, so the expected tooth interval
     // is derived from one minute in microseconds divided by RPM, then by 36 positions.
     const auto revolution_period_us =
@@ -84,7 +84,7 @@ TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapBetweenRevolutions)
 
     const auto pulses = source.generate(config);
     const auto intervals = intervals_between(pulses);
-    const auto nominal_interval = nominal_tooth_interval_for(config.target_rpm);
+    const auto nominal_interval = nominal_tooth_interval(config.target_rpm);
     const auto missing_tooth_gap = nominal_interval * 2;
 
     ASSERT_EQ(intervals.size(), pulses.size() - 1);

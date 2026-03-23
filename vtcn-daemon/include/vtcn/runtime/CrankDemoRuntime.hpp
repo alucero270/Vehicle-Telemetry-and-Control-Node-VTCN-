@@ -15,6 +15,7 @@ struct CrankDemoAppInfo final {
 };
 
 [[nodiscard]] CrankDemoAppInfo crank_demo_app_info() noexcept;
+[[nodiscard]] crank::RuntimeSummary crank_demo_runtime_summary();
 
 [[nodiscard]] int run_crank_demo_cli(std::ostream &out, std::ostream &err,
                                      const std::vector<std::string_view> &args);

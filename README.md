@@ -1,140 +1,157 @@
-# VTCN
+# VTCN (Vehicle Telemetry and Control Node)
 
-Vehicle Telemetry and Control Node is a systems-oriented C++ project aimed at a disciplined telemetry node
-architecture centered on the BeagleBone Black, with clear separation between hardware access, daemon-side
-processing, and versioned telemetry interfaces.
+VTCN is a systems-oriented C++ project focused on modeling and processing engine telemetry signals.
+
+The current implementation is a **host-side prototype** that:
+
+* Simulates a 36-1 crankshaft pulse signal
+* Detects the missing-tooth gap
+* Estimates RPM from pulse intervals
+
+This project demonstrates systems thinking, signal processing, and clean C++ structure — not hardware validation.
+
+---
+
+## Quick Start
+
+### Build
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+```
+
+### Run CLI Demo
+
+```bash
+./build/vtcn-daemon/vtcn-daemon --demo
+```
+
+### Run Tests
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+---
+
+## What This Does
+
+The current prototype models a common automotive crankshaft signal:
+
+* Generates deterministic pulse timestamps for a 36-1 crank wheel
+* Detects the missing-tooth gap (index position)
+* Computes RPM based on pulse timing
+
+All functionality runs on the host — no hardware required.
+
+---
 
 ## Current State
 
-The repository is currently in Phase 0 Virtual Development Mode.
+This repository is in **Phase 0 – Virtual Development Mode**.
 
-That means the active, reviewable slice is host-side only:
-- CMake-based daemon scaffolding
-- host-buildable C++ code and tests
-- architecture and ADR documentation
-- a weekend Phase 0 effort focused on crank pulse simulation, gap detection, and RPM estimation
+### Included
 
-That does not mean:
-- BeagleBone hardware validation is complete
-- HAL implementations are validated on target
-- MCU timing behavior is proven
-- transport, logging, or storage are production-ready
+* CMake-based build system
+* Host-side signal simulation
+* Gap detection and RPM estimation
+* Unit tests
+* CLI demo
 
-## Project Direction
+### Not Included (Yet)
 
-The long-term project goal is to build a telemetry node that can:
-- acquire signals from real hardware interfaces
-- normalize and process those signals in a daemon layer
-- publish versioned telemetry records to downstream consumers
-- preserve evidence and validation discipline as the system matures
+* Real hardware integration
+* BeagleBone Black validation
+* HAL implementations on target
+* Production telemetry transport or storage
 
-The intended architecture is:
+---
+
+## Architecture Overview
+
+### Current (Phase 0)
+
+```text
+Simulated Signals
+    |
+    v
+Gap Detection
+    |
+    v
+RPM Estimation
+    |
+    v
+CLI Output
+```
+
+### Target Architecture
 
 ```text
 Physical Signals
     |
     v
-HAL or MCU-facing transport
+HAL / MCU Layer
     |
     v
-VTCN daemon
-    |-- processing and estimation
-    |-- framing
-    |-- future logging, storage, and networking
+VTCN Daemon
     |
     v
-Documented downstream consumers
+Telemetry Output
 ```
 
-## Architecture Principles
+---
 
-These principles are active now, not future decoration:
-- HAL owns hardware I/O only
-- daemon-side logic owns normalization, policy, processing, estimation, and framing
-- protocol framing is separate from internal runtime structures
-- internal C++ object layout is not a wire contract
-- host-side validation is useful, but it is not hardware evidence
+## Project Goals
 
-See:
-- `docs/adr/ADR-001-hal-separation.md`
-- `docs/adr/ADR-002-telemetry-framing.md`
-- `docs/architecture/component_boundaries.md`
-- `docs/procedures/virtual_development_mode.md`
+The long-term goal is to build a telemetry node that can:
 
-## Phase 0 Focus
+* Acquire signals from real hardware
+* Normalize and process those signals
+* Produce structured telemetry output
+* Maintain clear separation between hardware, processing, and interfaces
 
-The current near-term implementation target is a host-side prototype inside `vtcn-daemon` that demonstrates:
-- 36-1 crankshaft pulse generation with monotonic timestamps
-- missing-tooth gap detection
-- RPM estimation from pulse intervals
-- clear CLI output and optionally simple telemetry framing
-- deterministic unit and integration tests
-
-This is intentionally a narrow slice. It is large enough to discuss systems thinking, signal processing,
-boundary ownership, testing, and build discipline without pretending to be hardware validation.
+---
 
 ## Repository Layout
 
 ```text
-docs/
-  adr/
-  architecture/
-  interfaces/
-  procedures/
-
-vtcn-daemon/
-  include/
-  src/
-  tests/
-
-roadmap/
-  components/
-
-toolchain/
+docs/           # Architecture, ADRs, and procedures
+vtcn-daemon/    # Active C++ implementation
+toolchain/      # Build and environment tooling
+roadmap/        # Future components and plans
 ```
 
-Interpretation:
-- `docs/` holds the architecture truth layer
-- `vtcn-daemon/` is the active host-side implementation area
-- `toolchain/` contains active build and deployment support
-- `roadmap/` holds future-facing component placeholders rather than reserving empty
-  top-level scaffolding
+---
 
-## Build And Test
+## Design Principles
 
-Current host-side commands:
+* Hardware access is isolated (HAL boundary)
+* Processing logic is deterministic and testable
+* Internal structures are not tied to wire formats
+* Host-side validation is useful, but not hardware proof
 
-```text
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
-ctest --test-dir build --output-on-failure
-```
+See:
 
-These commands validate host-side build wiring and tests only.
+* `docs/adr/ADR-001-hal-separation.md`
+* `docs/adr/ADR-002-telemetry-framing.md`
 
-## What Monday Should Show
-
-For the immediate submission goal, the repo should demonstrate:
-- modern C++ design in a small systems slice
-- deterministic time-based signal handling
-- clear module ownership
-- real tests and clean build tooling
-- documentation that is ambitious but honest
+---
 
 ## Roadmap
 
-Planned later phases may include:
-- BeagleBone bring-up and target validation
-- HAL implementations for BBB interfaces
-- optional MCU-assisted deterministic capture
-- telemetry framing expansion
-- transport, storage, and deployment hardening
+Future phases may include:
 
-Those remain future work until backed by implementation and evidence.
+* BeagleBone Black integration
+* Real signal acquisition
+* HAL implementation
+* Telemetry transport and storage
+* Hardware validation and testing
 
-## Archived Baseline
+---
 
-The previous top-level README was preserved at:
-- `docs/readme-old.md`
+## Notes
 
-It is kept as historical context, not as the current repo truth source.
+This project is intentionally scoped as a **focused systems prototype**.
+
+It is not meant to represent a complete embedded system, but rather a clean, reviewable slice of signal processing logic and architecture.

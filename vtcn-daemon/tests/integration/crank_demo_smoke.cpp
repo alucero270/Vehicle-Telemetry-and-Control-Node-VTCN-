@@ -14,6 +14,23 @@ int main() {
         return 1;
     }
 
+    const auto summary = vtcn::runtime::crank_demo_runtime_summary();
+    if (!summary.gap_result.has_value()) {
+        return 1;
+    }
+
+    if (!summary.rpm_estimate.has_value()) {
+        return 1;
+    }
+
+    if (summary.target_rpm.value != 600U) {
+        return 1;
+    }
+
+    if (summary.rpm_estimate->estimated_rpm.value != 600U) {
+        return 1;
+    }
+
     std::ostringstream out;
     std::ostringstream err;
 
@@ -33,6 +50,18 @@ int main() {
     }
 
     if (out.str().find("host-side-validation") == std::string::npos) {
+        return 1;
+    }
+
+    if (out.str().find("target-rpm: 600") == std::string::npos) {
+        return 1;
+    }
+
+    if (out.str().find("estimated-rpm: 600") == std::string::npos) {
+        return 1;
+    }
+
+    if (out.str().find("gap-index: 35") == std::string::npos) {
         return 1;
     }
 

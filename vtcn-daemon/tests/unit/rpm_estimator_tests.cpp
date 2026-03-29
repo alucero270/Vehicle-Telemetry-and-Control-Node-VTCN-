@@ -26,7 +26,6 @@ constexpr std::size_t kToothPositionsPerRevolution = 36;
 
 [[nodiscard]] auto make_config(std::uint32_t rpm, std::size_t revolution_count,
                                Timestamp start_time = Timestamp{0}) -> CrankSignalConfig {
-    // Keep test setup terse and consistent so each test stays focused on one behavior.
     return CrankSignalConfig{
         .target_rpm = Rpm{rpm},
         .revolution_count = Revolutions{revolution_count},
@@ -43,8 +42,6 @@ constexpr std::size_t kToothPositionsPerRevolution = 36;
 }
 
 [[nodiscard]] auto nominal_tooth_interval(const Rpm rpm) -> Interval {
-    // The generator uses integer microsecond timing, so the expected tooth interval
-    // comes from one minute in microseconds divided by RPM, then by 36 positions.
     const auto revolution_period_us = static_cast<Interval::rep>(60'000'000ULL / rpm.value);
     const auto revolution_period = Interval{revolution_period_us};
     return revolution_period / kToothPositionsPerRevolution;
@@ -62,8 +59,6 @@ constexpr std::size_t kToothPositionsPerRevolution = 36;
 
 [[nodiscard]] auto average_non_gap_adjacent_intervals(std::span<const PulseEvent> pulses,
                                                       const std::size_t gap_index) -> Interval {
-    // Recompute the expected nominal interval directly from the pulse timestamps
-    // so the test proves the estimator excludes exactly one known long gap.
     Interval total_nominal_interval{0};
     std::size_t nominal_interval_count = 0U;
 
@@ -80,10 +75,6 @@ constexpr std::size_t kToothPositionsPerRevolution = 36;
 }
 
 TEST(RpmEstimatorTest, ReturnsEstimateForValidCleanInput) {
-    // This is the smallest positive-path contract for Phase 0:
-    // - valid clean pulse sequence
-    // - valid detected missing-tooth gap
-    // - estimator returns a value rather than rejecting the input
     const auto config = make_config(600, 2);
 
     const SimulatedCrankPulseSource source{};
@@ -100,10 +91,6 @@ TEST(RpmEstimatorTest, ReturnsEstimateForValidCleanInput) {
 }
 
 TEST(RpmEstimatorTest, IgnoresMissingToothGapWhenComputingNominalInterval) {
-    // Arrange a clean deterministic two-revolution 36-1 pulse train.
-    //
-    // Two revolutions expose one observable inter-revolution missing-tooth gap
-    // in the finite pulse sequence, which keeps the expected gap location clear.
     const auto config = make_config(600, 2);
 
     const SimulatedCrankPulseSource source{};
@@ -113,27 +100,18 @@ TEST(RpmEstimatorTest, IgnoresMissingToothGapWhenComputingNominalInterval) {
 
     ASSERT_TRUE(gap_result.has_value());
 
-    // Compute the expected nominal interval in two complementary ways:
-    // - from the known deterministic generator rule
-    // - from the average of all observed non-gap adjacent intervals
-    //
-    // The second form is the more important contract for the estimator test.
     const auto expected_nominal_interval = nominal_tooth_interval(config.target_rpm);
     const auto expected_average_non_gap_interval =
         average_non_gap_adjacent_intervals(pulses, gap_result->gap_index);
 
-    // Also compute the biased average that incorrectly includes the long gap.
-    // This shows the error produced by averaging every interval blindly.
+    // Including the long gap would bias the nominal interval upward.
     const auto biased_average_interval = average_adjacent_intervals(pulses);
     const auto observed_gap_interval =
         pulses[gap_result->gap_index].timestamp - pulses[gap_result->gap_index - 1U].timestamp;
 
-    // Act.
     const RpmEstimator estimator{};
     const auto estimate = estimator.estimate(pulses, *gap_result);
 
-    // Assert the estimator returns a value, the nominal interval matches the
-    // average of the non-gap intervals, and the long gap does not bias RPM.
     ASSERT_TRUE(estimate.has_value());
     EXPECT_EQ(expected_average_non_gap_interval, expected_nominal_interval);
     EXPECT_EQ(estimate->nominal_tooth_interval, expected_average_non_gap_interval);
@@ -184,9 +162,6 @@ TEST(RpmEstimatorTest, KeepsRpmErrorWithinToleranceForRepresentativeInputs) {
         const auto percent_error =
             error_percentage(estimate->estimated_rpm, test_case.target_rpm);
 
-        // Keep the representative low/medium/high RPM coverage, but verify both
-        // the final RPM and the intermediate nominal tooth interval so the test
-        // catches either a conversion bug or a gap-exclusion bug.
         EXPECT_EQ(estimate->nominal_tooth_interval, test_case.expected_nominal_tooth_interval);
         EXPECT_LE(percent_error, kAllowedErrorPercent);
     }
@@ -228,8 +203,7 @@ TEST(RpmEstimatorTest, ReturnsNulloptForNonMonotonicTimestamps) {
 }
 
 TEST(RpmEstimatorTest, ReturnsNulloptForGapIndexZero) {
-    // `gap_index` names the later pulse of an adjacent interval, so zero is
-    // impossible by definition because there is no interval ending at pulse 0.
+    // `gap_index` names the later pulse of an adjacent interval.
     const auto config = make_config(600, 2);
 
     const SimulatedCrankPulseSource source{};
@@ -246,8 +220,6 @@ TEST(RpmEstimatorTest, ReturnsNulloptForGapIndexZero) {
 }
 
 TEST(RpmEstimatorTest, ReturnsNulloptForGapIndexAtOrPastPulseCount) {
-    // The latest valid adjacent interval ends at `pulses.size() - 1`, so any
-    // `gap_index >= pulses.size()` is impossible metadata.
     const auto config = make_config(600, 2);
 
     const SimulatedCrankPulseSource source{};

@@ -22,7 +22,6 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
 
 [[nodiscard]] auto make_config(std::uint32_t rpm, std::size_t revolution_count,
                                Timestamp start_time = Timestamp{0}) -> CrankSignalConfig {
-    // Keep test setup terse and consistent so each test stays focused on one behavior.
     return CrankSignalConfig{
         .target_rpm = Rpm{rpm},
         .revolution_count = Revolutions{revolution_count},
@@ -37,7 +36,6 @@ constexpr std::size_t kEmittedPulsesPerRevolution =
 }
 
 [[nodiscard]] auto intervals_between(std::span<const PulseEvent> pulses) -> std::vector<Interval> {
-    // Gap shape is validated from adjacent pulse timestamps rather than from synthetic gap events.
     std::vector<Interval> intervals;
     if (pulses.size() < 2) {
         return intervals;
@@ -78,10 +76,7 @@ TEST(SimulatedCrankPulseSourceTest, TimestampsAreStrictlyIncreasing) {
 }
 
 TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapPerObservableRevolutionBoundary) {
-    // The generator models one missing-tooth gap per revolution, but adjacent
-    // intervals only expose the gaps that sit between emitted pulses already in
-    // the finite output sequence. That means an N-revolution pulse vector shows
-    // exactly N - 1 observable long inter-revolution gaps.
+    // An N-revolution finite pulse sequence exposes N - 1 inter-revolution gaps.
     const auto revolution_count = std::size_t{4};
     const auto config = make_config(600, revolution_count);
     const SimulatedCrankPulseSource source{};
@@ -100,10 +95,6 @@ TEST(SimulatedCrankPulseSourceTest, EmitsOneObservableLongGapPerObservableRevolu
         }
     }
 
-    // Each observable boundary between two generated revolutions contributes one
-    // oversized interval. The final revolution's trailing missing-tooth gap is
-    // not represented because no subsequent emitted pulse exists in this finite
-    // sequence to close that last interval.
     EXPECT_EQ(long_gap_count, revolution_count - 1);
 }
 

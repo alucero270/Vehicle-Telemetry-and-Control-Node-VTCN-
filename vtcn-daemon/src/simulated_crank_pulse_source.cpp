@@ -6,7 +6,6 @@ namespace {
 
 [[nodiscard]] auto emitted_pulses_per_revolution(const vtcn::crank::CrankWheelProfile &profile)
     -> std::size_t {
-    // A 36-1 wheel has 36 tooth positions but only 35 emitted pulse events per revolution.
     return profile.tooth_positions_per_revolution - profile.missing_tooth_count;
 }
 
@@ -17,8 +16,7 @@ namespace {
         throw std::invalid_argument{"Cannot calculate nominal tooth interval for zero RPM"};
     }
 
-    // Host-side simulation uses integer microseconds so identical inputs produce identical
-    // timestamps without floating-point drift.
+    // Use integer microseconds so identical inputs produce identical timestamps.
     const auto revolution_period_us =
         static_cast<vtcn::crank::Interval::rep>(60'000'000ULL / rpm.value);
     const auto revolution_period = vtcn::crank::Interval{revolution_period_us};
@@ -48,7 +46,7 @@ std::vector<PulseEvent> SimulatedCrankPulseSource::generate(const CrankSignalCon
     const auto tooth_interval = nominal_tooth_interval(config.target_rpm, profile_);
     const auto missing_tooth_multiplier =
         static_cast<Interval::rep>(profile_.missing_tooth_count + 1U);
-    // Represent the missing tooth as one longer interval in time, not as a synthetic pulse.
+    // Model the missing tooth as one longer interval instead of a synthetic pulse.
     const auto missing_tooth_gap = tooth_interval * missing_tooth_multiplier;
 
     std::vector<PulseEvent> pulses;
@@ -58,8 +56,8 @@ std::vector<PulseEvent> SimulatedCrankPulseSource::generate(const CrankSignalCon
 
     for (std::size_t revolution = 0; revolution < config.revolution_count.value; ++revolution) {
         for (std::size_t tooth = 0; tooth < pulses_per_revolution; ++tooth) {
-            // Attach the long gap to the first emitted pulse of each revolution so the
-            // revolution boundary is visible in the generated timestamp sequence.
+            // Attach the long gap to the first emitted pulse so each revolution
+            // boundary is visible in the timestamp sequence.
             const auto interval = (tooth == 0U) ? missing_tooth_gap : tooth_interval;
             current_timestamp += interval;
 
